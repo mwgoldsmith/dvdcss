@@ -234,7 +234,7 @@ static int set_cache_directory( dvdcss_t dvdcss )
 
         /* Try looking in password file for home dir. */
         p_pwd = getpwuid(getuid());
-        if( p_pwd )
+        if( p_pwd && p_pwd->pw_dir && p_pwd->pw_dir[ 0 ] )
         {
             psz_home = p_pwd->pw_dir;
         }
@@ -248,7 +248,7 @@ static int set_cache_directory( dvdcss_t dvdcss )
         }
 
         /* Cache our keys in ${HOME}/.dvdcss/ */
-        if( psz_home )
+        if( psz_home && psz_home[ 0 ] )
         {
             int home_pos = 0;
 
@@ -273,6 +273,11 @@ static int set_cache_directory( dvdcss_t dvdcss )
             psz_cache = dvdcss->psz_cachefile;
         }
 #endif /* ! defined( _WIN32 ) */
+    }
+    else
+    {
+        strncpy( dvdcss->psz_cachefile, psz_cache, PATH_MAX );
+        dvdcss->psz_cachefile[PATH_MAX - 1] = '\0';
     }
 
     /* Check that there is enough space for the cache directory path and the
@@ -300,7 +305,7 @@ static int init_cache_dir( dvdcss_t dvdcss )
     i_ret = mkdir( dvdcss->psz_cachefile, 0755 );
     if( i_ret < 0 && errno != EEXIST )
     {
-        print_error( dvdcss, "failed creating cache directory" );
+        print_error( dvdcss, "failed creating cache directory '%s'", dvdcss->psz_cachefile );
         dvdcss->psz_cachefile[0] = '\0';
         return -1;
     }
